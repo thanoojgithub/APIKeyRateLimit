@@ -10,12 +10,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
 import com.ratelimit.pojo.Hotel;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.bean.CsvToBean;
 import au.com.bytecode.opencsv.bean.HeaderColumnNameTranslateMappingStrategy;
 
+@Component
 public class HotelsFactory {
 
 	public static void main(String[] args) {

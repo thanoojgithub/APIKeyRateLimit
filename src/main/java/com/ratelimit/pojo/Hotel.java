@@ -14,7 +14,7 @@ public class Hotel implements Comparable<Hotel> {
 	private String city;
 	private int hotelId;
 	private String room;
-	private String price;
+	private int price;
 	private int cityId;
 
 	public String getCity() {
@@ -41,11 +41,11 @@ public class Hotel implements Comparable<Hotel> {
 		this.room = room;
 	}
 
-	public String getPrice() {
+	public int getPrice() {
 		return price;
 	}
 
-	public void setPrice(String price) {
+	public void setPrice(int price) {
 		this.price = price;
 	}
 
@@ -70,7 +70,7 @@ public class Hotel implements Comparable<Hotel> {
 		result = prime * result + ((city == null) ? 0 : city.hashCode());
 		result = prime * result + cityId;
 		result = prime * result + hotelId;
-		result = prime * result + ((price == null) ? 0 : price.hashCode());
+		result = prime * result + price;
 		result = prime * result + ((room == null) ? 0 : room.hashCode());
 		return result;
 	}
@@ -93,10 +93,7 @@ public class Hotel implements Comparable<Hotel> {
 			return false;
 		if (hotelId != other.hotelId)
 			return false;
-		if (price == null) {
-			if (other.price != null)
-				return false;
-		} else if (!price.equals(other.price))
+		if (price != other.price)
 			return false;
 		if (room == null) {
 			if (other.room != null)
@@ -114,7 +111,7 @@ public class Hotel implements Comparable<Hotel> {
 	public static Comparator<Hotel> HotelsSortByPriceASC = new Comparator<Hotel>() {
 		public int compare(Hotel h1, Hotel h2) {
 			// ascending order
-			return h1.getPrice().compareTo(h2.getPrice());
+			return h1.getPrice() - h2.getPrice();
 			// descending order
 			// return fruitName2.compareTo(fruitName1);
 		}
@@ -123,7 +120,7 @@ public class Hotel implements Comparable<Hotel> {
 	public static Comparator<Hotel> HotelsSortByPriceDESC = new Comparator<Hotel>() {
 		public int compare(Hotel h1, Hotel h2) {
 			// descending order
-			return h2.getPrice().compareTo(h1.getPrice());
+			return h2.getPrice() - h1.getPrice();
 		}
 	};
 
