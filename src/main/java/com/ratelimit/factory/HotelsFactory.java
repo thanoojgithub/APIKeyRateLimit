@@ -1,9 +1,9 @@
 package com.ratelimit.factory;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,8 +39,9 @@ public class HotelsFactory {
 		columnMapping.put("PRICE", "price");
 		beanStrategy.setColumnMapping(columnMapping);
 		CsvToBean<Hotel> csvToBean = new CsvToBean<Hotel>();
-		URL url = ClassLoader.getSystemResource("Hotels.csv");
-		try (FileReader fileReader = new FileReader(url.getFile())) {
+		//CSV file should be in same folder of JAR file
+		File f = new File("Hotels.csv");
+		try (FileReader fileReader = new FileReader(f.getAbsolutePath())) {
 			CSVReader reader = new CSVReader(fileReader, ',');
 			hotels = csvToBean.parse(beanStrategy, reader);
 		} catch (FileNotFoundException e) {
@@ -55,6 +56,4 @@ public class HotelsFactory {
 		Collections.sort(hotelsWithCityId);
 		return hotelsWithCityId;
 	}
-	
-	
 }

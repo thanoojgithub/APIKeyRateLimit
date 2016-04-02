@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Description;
 
 /**
- * Hello world!
+ * API Key Rate Limit
  *
  */
 @SpringBootApplication

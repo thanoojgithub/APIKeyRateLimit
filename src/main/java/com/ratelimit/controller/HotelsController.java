@@ -1,20 +1,23 @@
 package com.ratelimit.controller;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletContext;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.ServletContextAware;
 
 import com.ratelimit.factory.HotelsFactory;
 import com.ratelimit.pojo.APIKey;
@@ -23,22 +26,28 @@ import com.ratelimit.pojo.Hotel;
 
 @RestController
 @EnableConfigurationProperties
-public class HotelsController implements ServletContextAware {
+public class HotelsController {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(HotelsController.class);
 
 	@Value("${timeIntervalPerRequestInMilliSeconds}")
 	Long timeIntervalPerRequestInMilliSeconds;
 
 	@Value("${suspendedTimeIntervalInMilliSeconds}")
 	Long suspendedTimeIntervalInMilliSeconds;
-	
+
 	@Value("${limit}")
 	int limit;
 
+	@Autowired
 	private ServletContext servletContext;
+
 	private static List<Hotel> hotelsFromCSV;
 
 	static {
+		LOGGER.info("loading the CSV file into List of Objects");
 		hotelsFromCSV = HotelsFactory.getHotelsFromCSV();
+		LOGGER.info("loaded the CSV file into List of Objects");
 	}
 
 	public ServletContext getServletContext() {
@@ -55,12 +64,20 @@ public class HotelsController implements ServletContextAware {
 
 	@RequestMapping("/")
 	GenericResponse home() {
+		LOGGER.info("Welcome, API Key Rate Limit");
 		return new GenericResponse(200, "Welcome, API Key Rate Limit", null);
 	}
 
 	@RequestMapping("/generateAPIKey")
 	GenericResponse generateAPIKey() {
-		return new GenericResponse(200, "SUCCESS", UUID.randomUUID().toString());
+		LOGGER.info("generating API Key");
+		try {
+			InetAddress.getLocalHost();
+			return new GenericResponse(200, "SUCCESS", InetAddress.getLocalHost().getHostAddress().replace(".", ""));
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			return new GenericResponse(500, "FAILED to generate API Key", null);
+		}
 	}
 
 	@RequestMapping("/hotels")
@@ -80,7 +97,8 @@ public class HotelsController implements ServletContextAware {
 				if (aPIKeyIns.getCount().get() <= limit) {
 					if (diffOfLastTime <= timeIntervalPerRequestInMilliSeconds) {
 						genericResponse.setStatus(500);
-						genericResponse.setMsg("REQUEST REJECTED for next "+ timeIntervalPerRequestInMilliSeconds/1000.0f + " seconds.");
+						genericResponse.setMsg("REQUEST REJECTED for next "
+								+ timeIntervalPerRequestInMilliSeconds / 1000.0f + " seconds.");
 					} else {
 						getHotelList(id, sort, genericResponse, aPIKeyIns);
 					}
@@ -88,12 +106,14 @@ public class HotelsController implements ServletContextAware {
 					aPIKeyIns.getCount().set(0);
 					aPIKeyIns.setLastHttpCallTimestamp(System.currentTimeMillis());
 					genericResponse.setStatus(500);
-					genericResponse.setMsg("REQUEST REJECTED for next "+ suspendedTimeIntervalInMilliSeconds/60000.0f + " seconds.");
+					genericResponse.setMsg("REQUEST REJECTED for next " + suspendedTimeIntervalInMilliSeconds / 60000.0f
+							+ " seconds.");
 				}
 			} else {
 				if (diffOfLastTime <= suspendedTimeIntervalInMilliSeconds) {
 					genericResponse.setStatus(500);
-					genericResponse.setMsg("REQUEST REJECTED for next "+ suspendedTimeIntervalInMilliSeconds/60000.0f + " minutes.");
+					genericResponse.setMsg("REQUEST REJECTED for next " + suspendedTimeIntervalInMilliSeconds / 60000.0f
+							+ " minutes.");
 				} else {
 					getHotelList(id, sort, genericResponse, aPIKeyIns);
 				}
@@ -133,11 +153,6 @@ public class HotelsController implements ServletContextAware {
 		else
 			Collections.sort(hotelsByCityId, Hotel.HotelsSortByPriceDESC);
 		genericResponse.setObj(hotelsByCityId);
-	}
-
-	@Override
-	public void setServletContext(ServletContext servletContext) {
-		this.servletContext = servletContext;
 	}
 
 }
